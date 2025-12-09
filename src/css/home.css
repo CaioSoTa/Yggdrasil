@@ -1,6 +1,30 @@
-#Content img {
-    width: 40%;
-    height: 40%;
+
+/* PAGINA HOME ----------------------------------------------------------------------------------------------------------------------------------- */
+
+/* Essencial */
+* {
+    /* 1. Remove padding e margin padrão de TODOS os elementos (divs, body, h1, etc.) */
+    margin: 0;
+    padding: 0;
+    
+    /* 2. Garante que padding e border não aumentem a largura/altura total do elemento */
+    box-sizing: border-box; 
+}
+
+/* Opcional: Garante que o body não tenha margens do navegador */
+body {
+    margin: 0;
+    padding: 0;
+}
+
+/* Bloco de código apenas para conteudo ----------------------------------------------------------------------------------------------------------------------------------- */
+
+#Header {
+    /* padding-top: 54px;
+    padding-bottom: 54px; */
+    background-color: #007D00;
+    display: flex;
+    
 }
 
 #Content {
@@ -11,15 +35,32 @@
     padding-left: 20px;
 }
 
+/* Bloco de código apenas para conteudo ----------------------------------------------------------------------------------------------------------------------------------- */
+
+/* Bloco de código apenas para imagens ----------------------------------------------------------------------------------------------------------------------------------- */
+
+#images {
+    padding-top: 30px;
+}
+
 #images .main {
     position: relative;
-    z-index: 2;
+    z-index: 1;
+    width: 659px;
+    height: 659px;
 }
 
 #images .addon {
-    
     position: absolute;
-    z-index: 1; 
-    width: 80px;  
-    height: 200px;
+    z-index: 2; 
 }
+
+#color {
+    background-color: #F1F6C8;
+    width: 640px;
+    height: 640px;
+    position: absolute;
+    left: 5px;
+    top: 130px;
+}
+/* Bloco de código apenas para imagens ----------------------------------------------------------------------------------------------------------------------------------- */
