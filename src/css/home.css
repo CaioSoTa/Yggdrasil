@@ -1,0 +1,25 @@
+#Content img {
+    width: 40%;
+    height: 40%;
+}
+
+#Content {
+    display: flex;
+}
+
+#bem-vindo {
+    padding-left: 20px;
+}
+
+#images .main {
+    position: relative;
+    z-index: 2;
+}
+
+#images .addon {
+    
+    position: absolute;
+    z-index: 1; 
+    width: 80px;  
+    height: 200px;
+}
