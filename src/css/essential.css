@@ -1,0 +1,21 @@
+/*  Essencial  */
+* {
+    /* 1. Remove padding e margin padrão de TODOS os elementos (divs, body, h1, etc.) */
+    margin: 0;
+    padding: 0;
+    
+    /* 2. Garante que padding e border não aumentem a largura/altura total do elemento */
+    box-sizing: border-box; 
+    
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #E1FFD5;
+    width: 100%;
+}
+
+main {
+    display: flex;
+}
