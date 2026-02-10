@@ -11,20 +11,51 @@
     box-sizing: border-box; 
 }
 
+/* Header */
+
+header {
+    background-color: #007D00;
+    display: flex;
+    font-family: "Mate SC";
+    align-items: right;
+}
+
+header h1, header h2 {
+    font-family: "Mate SC", serif;
+}
+
+header h2 {
+    font-size: 1.1rem; /* Tamanho de menu */
+    cursor: pointer;
+}
+
 /* Opcional: Garante que o body não tenha margens do navegador */
 body {
     margin: 0;
     padding: 0;
+    background-color: #E1FFD5;
 }
+
+.mate-sc-regular {
+  font-family: "Mate SC", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
 
 /* Bloco de código apenas para conteudo ----------------------------------------------------------------------------------------------------------------------------------- */
 
 #Header {
     /* padding-top: 54px;
     padding-bottom: 54px; */
-    background-color: #007D00;
-    display: flex;
     
+    
+}
+
+#Header h1 {
+    font-size: 40px;
+    font-family: Mate SC;
+    color: white;
 }
 
 #Content {
@@ -64,3 +95,9 @@ body {
     top: 130px;
 }
 /* Bloco de código apenas para imagens ----------------------------------------------------------------------------------------------------------------------------------- */
+
+/* Classes customs */
+
+.bg-custom-verde {
+    background-color: #E1FFD5 !important;
+}
