@@ -71,49 +71,108 @@
             }
         }
 
+// ... (mantenha as constantes de SVG e colorScale anteriores)
+
         function renderTree(data) {
-            // Limpa o SVG antes de renderizar (caso haja erro e precise recarregar)
-            g.selectAll("*").remove();
+            let i = 0;
+            const duration = 750; // Velocidade da animação
+            let root = d3.hierarchy(data);
+            root.x0 = width / 2;
+            root.y0 = 0;
 
-            const root = d3.hierarchy(data);
-            const treeLayout = d3.tree().size([width - 100, height - 200]);
-            treeLayout(root);
+            // Fecha todos os nós após o primeiro nível inicialmente
+            if (root.children) {
+                root.children.forEach(collapse);
+            }
 
-            // Desenha as linhas (Links) com as cores da foto
-            g.selectAll(".link")
-                .data(root.links())
-                .join("path")
-                .attr("class", "link")
-                .attr("stroke", d => colorScale(d.source.depth))
-                .attr("d", d3.linkVertical()
-                    .x(d => d.x)
-                    .y(d => d.y));
+            update(root);
 
-            // Cria os nós (Gerais)
-            const node = g.selectAll(".node")
-                .data(root.descendants())
-                .join("g")
-                .attr("class", "node")
-                .attr("transform", d => `translate(${d.x},${d.y})`)
-                .on("click", (event, d) => {
-                    const term = d.data.name.replace(" ", "_");
-                    window.open(`https://pt.wikipedia.org/wiki/${term}`, '_blank');
+            function collapse(d) {
+                if (d.children) {
+                    d._children = d.children;
+                    d._children.forEach(collapse);
+                    d.children = null;
+                }
+            }
+
+            function update(source) {
+                const treeData = d3.tree().size([width, height])(root);
+                const nodes = treeData.descendants();
+                const links = treeData.links();
+
+                nodes.forEach(d => { d.y = d.depth * 180 }); // Distância entre níveis
+
+                // --- NÓS ---
+                const node = g.selectAll('g.node')
+                    .data(nodes, d => d.id || (d.id = ++i));
+
+                const nodeEnter = node.enter().append('g')
+                    .attr('class', 'node')
+                    .attr('transform', d => `translate(${source.x0},${source.y0})`)
+                    .on('click', (event, d) => {
+                        // Clique único: Expandir/Recolher
+                        if (d.children) {
+                            d._children = d.children;
+                            d.children = null;
+                        } else {
+                            d.children = d._children;
+                            d._children = null;
+                        }
+                        update(d);
+                    })
+                    .on('dblclick', (event, d) => {
+                        // Clique duplo: Wikipédia
+                        const term = d.data.name.replace(" ", "_");
+                        window.open(`https://pt.wikipedia.org/wiki/${term}`, '_blank');
+                    });
+
+                nodeEnter.append('rect')
+                    .attr('width', 120)
+                    .attr('height', 30)
+                    .attr('x', -60)
+                    .attr('y', -15)
+                    .attr('fill', d => d._children ? "#ff4400" : "#2a0e05") // Cor muda se tiver filhos escondidos
+                    .attr('stroke', d => colorScale(d.depth));
+
+                nodeEnter.append('text')
+                    .attr('dy', 5)
+                    .attr('text-anchor', 'middle')
+                    .text(d => d.data.name);
+
+                // Transição dos nós para a posição correta
+                const nodeUpdate = nodeEnter.merge(node);
+                nodeUpdate.transition().duration(duration)
+                    .attr('transform', d => `translate(${d.x},${d.y})`);
+
+                // --- LINKS ---
+                const link = g.selectAll('path.link')
+                    .data(links, d => d.target.id);
+
+                const linkEnter = link.enter().insert('path', 'g')
+                    .attr('class', 'link')
+                    .attr('stroke', d => colorScale(d.source.depth))
+                    .attr('d', d3.linkVertical()
+                        .x(d => source.x0)
+                        .y(d => source.y0));
+
+                linkEnter.merge(link).transition().duration(duration)
+                    .attr('d', d3.linkVertical()
+                        .x(d => d.x)
+                        .y(d => d.y));
+
+                // Saindo: Remove nós e links suavemente
+                node.exit().transition().duration(duration)
+                    .attr('transform', d => `translate(${source.x},${source.y})`).remove();
+                
+                link.exit().transition().duration(duration)
+                    .attr('d', d3.linkVertical().x(d => source.x).y(d => source.y)).remove();
+
+                // Guarda as posições antigas para a próxima animação
+                nodes.forEach(d => {
+                    d.x0 = d.x;
+                    d.y0 = d.y;
                 });
-
-            // Retângulos (Caixas dos nomes)
-            node.append("rect")
-                .attr("width", 120)
-                .attr("height", 30)
-                .attr("x", -60)
-                .attr("y", -15)
-                .attr("fill", d => d3.color(colorScale(d.depth)).darker(1.5))
-                .attr("stroke", d => colorScale(d.depth));
-
-            // Texto
-            node.append("text")
-                .attr("dy", 5)
-                .attr("text-anchor", "middle")
-                .text(d => d.data.name);
+            }
         }
 
         // Função que faltava para o código não dar erro
