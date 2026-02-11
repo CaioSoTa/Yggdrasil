@@ -9,7 +9,14 @@
     
 }
 
-body {
+#cladobody {
+    background-color: #0d0502; /* Fundo bem escuro */
+    color: white;
+    margin: 0;
+}
+
+
+#homebody {
     margin: 0;
     padding: 0;
     background-color: #E1FFD5;
