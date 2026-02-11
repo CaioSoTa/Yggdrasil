@@ -19,3 +19,14 @@ body {
 main {
     display: flex;
 }
+
+body{
+    font-family: "Mate SC";
+
+}
+
+main h1{
+    color: #0CB300;
+    font-size: 96px;
+    font-weight: bold;
+}
