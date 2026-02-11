@@ -1,28 +1,212 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-    <head>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="../src/css/all.css">
-        <title>Document</title>
-        <script href="../src/scripts/cladograma.js"></script>
-    </head>
-    <body>
-        <header>
-            <div class="row g-0 align-items-center d-flex">
-                <h1 class="col-sm-6">Yggdrasil</h1>
-                <h2 class="col-sm-2">Cladograma</h2>
-                <h2 class="col-sm-2">Sobre</h2>
-                <h2 class="col-sm-2">FAQ</h2>
-            </div>
-        </header>
-        <main>
-            <div class="row">
-                <h1 class="col-sm-12 p-4">Cladograma</h1>
-                <input id="searchBarSpecies" placeholder="Pesquisar...">
-            </div>
-        </main>
-    </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yggdrasil - Mammalia</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../src/css/all.css">
+    <link rel="stylesheet" href="../src/css/cladograma.css">
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <header>
+        <div class="row g-0 align-items-center d-flex">
+            <h1 class="col-sm-6">Yggdrasil</h1>
+            <h2 class="col-sm-2">Cladograma</h2>
+            <h2 class="col-sm-2">Sobre</h2>
+            <h2 class="col-sm-2">FAQ</h2>
+        </div>
+    </header>
+
+    <main>
+        <div id="tree-container"></div>
+    </main>
+
+    <script>
+        const width = window.innerWidth;
+        const height = window.innerHeight * 1.5;
+
+        const svg = d3.select("#tree-container")
+            .append("svg")
+            .attr("width", "100%")
+            .attr("height", "100%")
+            .call(d3.zoom().scaleExtent([0.1, 5]).on("zoom", (event) => {
+                g.attr("transform", event.transform);
+            }))
+            .append("g");
+
+        const g = svg.append("g");
+
+        // Escala de cores (Amarelo para Vermelho) baseada na profundidade
+        const colorScale = d3.scaleSequential(d3.interpolateYlOrRd).domain([5, 0]);
+
+        async function loadData() {
+            const apiURL = 'https://www.onezoom.org/OZ_API.php?action=get_json&ott_id=306454&max_depth=2';
+            const proxyURL = `https://api.allorigins.win/get?url=${encodeURIComponent(apiURL)}`;
+
+            try {
+                const response = await fetch(proxyURL);
+                if (!response.ok) throw new Error("Erro na rede");
+                
+                const wrapper = await response.json();
+                const data = JSON.parse(wrapper.contents);
+
+                const formatData = (obj) => {
+                    if (obj.child) {
+                        obj.children = obj.child;
+                        delete obj.child;
+                        obj.children.forEach(formatData);
+                    }
+                    obj.name = obj.n || obj.scientific_name || obj.name || "Taxon";
+                };
+
+                formatData(data);
+                renderTree(data);
+            } catch (error) {
+                console.warn("Usando dados locais de fallback devido a erro na API.");
+                renderTree(getExemploLocal());
+            }
+        }
+
+// ... (mantenha as constantes de SVG e colorScale anteriores)
+
+        function renderTree(data) {
+            let i = 0;
+            const duration = 750; // Velocidade da animação
+            let root = d3.hierarchy(data);
+            root.x0 = width / 2;
+            root.y0 = 0;
+
+            // Fecha todos os nós após o primeiro nível inicialmente
+            if (root.children) {
+                root.children.forEach(collapse);
+            }
+
+            update(root);
+
+            function collapse(d) {
+                if (d.children) {
+                    d._children = d.children;
+                    d._children.forEach(collapse);
+                    d.children = null;
+                }
+            }
+
+            function update(source) {
+                const treeData = d3.tree().size([width, height])(root);
+                const nodes = treeData.descendants();
+                const links = treeData.links();
+
+                nodes.forEach(d => { d.y = d.depth * 180 }); // Distância entre níveis
+
+                // --- NÓS ---
+                const node = g.selectAll('g.node')
+                    .data(nodes, d => d.id || (d.id = ++i));
+
+                const nodeEnter = node.enter().append('g')
+                    .attr('class', 'node')
+                    .attr('transform', d => `translate(${source.x0},${source.y0})`)
+                    .on('click', (event, d) => {
+                        // Clique único: Expandir/Recolher
+                        if (d.children) {
+                            d._children = d.children;
+                            d.children = null;
+                        } else {
+                            d.children = d._children;
+                            d._children = null;
+                        }
+                        update(d);
+                    })
+                    .on('dblclick', (event, d) => {
+                        // Clique duplo: Wikipédia
+                        const term = d.data.name.replace(" ", "_");
+                        window.open(`https://pt.wikipedia.org/wiki/${term}`, '_blank');
+                    });
+
+                nodeEnter.append('rect')
+                    .attr('width', 120)
+                    .attr('height', 30)
+                    .attr('x', -60)
+                    .attr('y', -15)
+                    .attr('fill', d => d._children ? "#ff4400" : "#2a0e05") // Cor muda se tiver filhos escondidos
+                    .attr('stroke', d => colorScale(d.depth));
+
+                nodeEnter.append('text')
+                    .attr('dy', 5)
+                    .attr('text-anchor', 'middle')
+                    .text(d => d.data.name);
+
+                // Transição dos nós para a posição correta
+                const nodeUpdate = nodeEnter.merge(node);
+                nodeUpdate.transition().duration(duration)
+                    .attr('transform', d => `translate(${d.x},${d.y})`);
+
+                // --- LINKS ---
+                const link = g.selectAll('path.link')
+                    .data(links, d => d.target.id);
+
+                const linkEnter = link.enter().insert('path', 'g')
+                    .attr('class', 'link')
+                    .attr('stroke', d => colorScale(d.source.depth))
+                    .attr('d', d3.linkVertical()
+                        .x(d => source.x0)
+                        .y(d => source.y0));
+
+                linkEnter.merge(link).transition().duration(duration)
+                    .attr('d', d3.linkVertical()
+                        .x(d => d.x)
+                        .y(d => d.y));
+
+                // Saindo: Remove nós e links suavemente
+                node.exit().transition().duration(duration)
+                    .attr('transform', d => `translate(${source.x},${source.y})`).remove();
+                
+                link.exit().transition().duration(duration)
+                    .attr('d', d3.linkVertical().x(d => source.x).y(d => source.y)).remove();
+
+                // Guarda as posições antigas para a próxima animação
+                nodes.forEach(d => {
+                    d.x0 = d.x;
+                    d.y0 = d.y;
+                });
+            }
+        }
+
+        // Função que faltava para o código não dar erro
+        function getExemploLocal() {
+            return {
+                name: "Mammalia",
+                children: [
+                    {
+                        name: "Monotremata",
+                        children: [{ name: "Ornithorhynchidae" }, { name: "Tachyglossidae" }]
+                    },
+                    {
+                        name: "Theria",
+                        children: [
+                            { 
+                                name: "Marsupialia", 
+                                children: [{ name: "Didelphimorphia" }, { name: "Diprotodontia" }] 
+                            },
+                            { 
+                                name: "Placentalia", 
+                                children: [
+                                    { name: "Rodentia" },
+                                    { name: "Primates" },
+                                    { name: "Carnivora" },
+                                    { name: "Cetartiodactyla" }
+                                ] 
+                            }
+                        ]
+                    }
+                ]
+            };
+        }
+
+        loadData();
+    </script>
+</body>
 </html>
