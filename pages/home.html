@@ -1,35 +1,61 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-br">
     <head>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="../src/css/all.css">
-        <title>Bootstrap demo</title>
+        <title>Yggdrasil</title>
         
     </head>
     <body id="homebody">
-        <header>
-            <div class="row g-0 align-items-center d-flex">
-                <h1 class="col-sm-6">Yggdrasil</h1>
-                <h2 class="col-sm-2">Cladograma</h2>
-                <h2 class="col-sm-2">Sobre</h2>
-                <h2 class="col-sm-2">FAQ</h2>
+    <header class="shadow-sm sticky-top">
+        <nav class="container d-flex justify-content-between align-items-center py-3">
+            <h1 class="title m-0 fs-3">Yggdrasil</h1>
+            <div class="nav-links">
+                <a href="cladograma.html" class="text-white px-3 text-decoration-none">Cladograma</a>
+                <a href="#" class="text-white px-3 text-decoration-none">Sobre</a>
+                <a href="#" class="text-white px-3 text-decoration-none">FAQ</a>
+                <a href="login.html" class="text-white px-3 text-decoration-none">Login/Cadastro</a>
             </div>
-        </header>
-        <main>
-            <div id="dino-card" class="ps-4 pt-2">
-                <img class="addon" src="../src/imgs/image 4.png" style="position:absolute; width: 250px; height: 900px; top: 20px; left: 0px;">
-                <img class="addon" src="../src/imgs/image 5.png" style="position:absolute; width: 300px; height: 300px; top: 45px; left: 420px;">
-                <img class="main" src="../src/imgs/image 3.png" alt="Espinossauro">
+        </nav>
+    </header>
+
+    <main class="container my-5">
+    <div class="row align-items-center mb-5">
+        <div class="col-lg-6">
+            <h2 class="display-4 fw-bold text-success mb-4">Bem Vindo</h2>
+            <p class="lead text-dark">
+                Similarmente à árvore da mitologia nórdica <strong>Yggdrasil</strong>, a árvore evolutiva dos seres vivos é enorme e extensa...
+            </p>
+            <p class="text-muted">Clique abaixo para acessar o Cladograma interativo:</p>
+            <a href="cladograma.html" class="btn btn-success btn-lg px-5 py-3 shadow mt-3">
+                Acessar Cladograma
+            </a>
+        </div>
+        <div class="col-lg-6 text-center position-relative mt-4 mt-lg-0">
+            <div class="dino-frame p-3 shadow-lg bg-white rounded">
+                <img class="img-fluid rounded" src="../src/imgs/image 3.png" alt="Espinossauro">
+                <img class="d-none d-md-block" src="../src/imgs/image 5.png" style="position:absolute; width: 120px; top: -20px; right: -10px;">
             </div>
-            <div id="content">
-                <h1>Bem Vindo</h1>
-                <p>Similarmente à árvore da mitologia nórdica Yggdrasil, a árvore evolutiva dos seres vivos é enorme e extensa, possuindo diversos reinos entre seus galhos.Para facilitar seu estudo e compreensão, este site promove o uso de um cladograma interativo, podendo visualizar como certas espécies evoluíram, seus parentescos etc.
-                Clique abaixo para acessar o Cladograma:</p>
-                <button><a href="cladograma.html"> Cladograma </a></button>
+        </div>
+    </div>
+
+    <hr class="my-5 opacity-0"> <div class="row align-items-center pt-5">
+        <div class="col-lg-6 mb-4 mb-lg-0">
+            <div class="p-2 shadow-lg bg-white rounded border border-success border-2">
+                <img class="img-fluid rounded w-100" src="../src/imgs/cladogramaEx.png" alt="Cladograma Exemplo">
             </div>
-        </main>
-    </body>
+        </div>
+        
+        <div class="col-lg-6 ps-lg-5">
+            <h2 class="display-4 fw-bold text-success mb-4">O que é um Cladograma?</h2>
+            <p class="lead text-dark">
+                Imagine a árvore genealógica da vida. Um cladograma é um diagrama que organiza os seres vivos baseando-se em suas relações de parentesco. Ele não mostra apenas quem veio antes, mas quem compartilha um ancestral comum exclusivo. Cada 'galho' representa uma nova característica evolutiva que surgiu.
+            </p>
+        </div>
+    </div>
+</main>
+</body>
 </html>

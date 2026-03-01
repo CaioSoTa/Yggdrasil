@@ -8,9 +8,9 @@
     box-sizing: border-box; 
     
 }
-
+/*
 #cladobody {
-    background-color: #0d0502; /* Fundo bem escuro */
+    background-color: #0d0502;  Fundo bem escuro 
     color: white;
     margin: 0;
 }
@@ -31,9 +31,9 @@ body{
     font-family: "Mate SC";
 
 }
+*/
 
-main h1{
-    color: #0CB300;
-    font-size: 96px;
-    font-weight: bold;
+main h2 {
+    color: #1b5e20 !important;
+    font-size: 3.5rem; /* Ajustado para ser responsivo */
 }

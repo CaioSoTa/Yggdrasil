@@ -1,10 +1,41 @@
-.dino-card {
-    background-color: #007D00;
-    max-width: 667px;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+#homebody, html {
+    height: auto !important; /* Garante que a altura seja baseada no conteúdo */
+    min-height: 100vh;      /* Garante que o fundo cubra pelo menos a tela toda */
+    overflow-y: auto;       /* Força a barra de rolagem a aparecer se necessário */
 }
 
+main {
+    display: block;         /* Mude de flex para block se estiver dando conflito no scroll */
+    width: 100%;
+    padding-bottom: 100px;  /* Dá um "respiro" no final da página */
+}
 
-#content{
+.dino-frame {
+    display: inline-block;
+    background-color: white;
+}
+
+.content{
     padding: 40px;
 }
 
+h1, h2, .btn {
+    font-family: "Mate SC", serif;
+}
+
+.title {
+    color: white;
+}
+
+.btn-success {
+    background-color: #1b5e20;
+    border: none;
+    transition: transform 0.2s;
+}
+
+.btn-success:hover {
+    transform: scale(1.05);
+    background-color: #2e7d32;
+}
