@@ -6,205 +6,932 @@
     <title>Yggdrasil - Mammalia</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../src/css/all.css">
-    <link rel="stylesheet" href="../src/css/cladograma.css">
+    <style>
+        #tooltip {
+            position: absolute;
+            width: 280px;
+            background: rgb(51, 24, 1);
+            border: 1px solid #f56a00;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 1000;
+            font-family: sans-serif;
+            color: white;
+            pointer-events: auto;
+            transition: opacity 0.2s;
+        }
 
+        #tooltip img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        #tooltip h3 { font-size: 1.1rem; margin: 5px 0; color: #ff4000; }
+        #tooltip p { font-size: 0.85rem; line-height: 1.4; max-height: 100px; overflow: hidden; text-overflow: ellipsis; }
+        #tooltip .wiki-link { display: block; margin-top: 10px; text-align: right; font-weight: bold; color: #479cf0; text-decoration: none; font-size: 0.8rem; }
+
+        #legenda {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(26, 10, 5, 0.9);
+            border: 1px solid #f56a00;
+            padding: 15px;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.85rem;
+            z-index: 500;
+            font-family: sans-serif;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        #legenda h4 { margin: 0 0 10px 0; font-size: 1rem; color: #ff4000; font-weight: bold; }
+        .legenda-item { display: flex; align-items: center; margin-bottom: 6px; }
+        .legenda-cor { width: 14px; height: 14px; border-radius: 3px; margin-right: 10px; border: 1px solid rgba(255,255,255,0.2); }
+
+        #loader {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(26, 10, 5, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;  
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #2a0e05;
+            border-top: 5px solid #ff4000;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #loader p {
+            margin-top: 15px;
+            color: #ff4000;
+            font-weight: bold;
+            font-family: sans-serif;
+        }
+        
+        #map-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 500;
+        }
+
+        #map-controls button {
+            background: rgba(26, 10, 5, 0.9);
+            border: 1px solid #f56a00;
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: transform 0.1s, background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #map-controls button:active { transform: scale(0.9); }
+        #map-controls button:hover { background: #f56a00; color: #1a0a05; }
+
+        body.tema-claro {
+            background-color: #e3d2aa; 
+            color: #1a0a05;
+        }
+
+        body.tema-claro header {
+            background: #e6dfd5;
+            border-bottom: 2px solid #c97a34;
+        }
+
+        body.tema-claro #search-input {
+            background-color: #ffffff !important;
+            color: #333 !important;
+            border-color: #ccc !important;
+        }
+
+        body.tema-claro #legenda, body.tema-claro #loader {
+            background: rgba(244, 241, 234, 0.95);
+            color: #1a0a05;
+            border-color: #c97a34;
+        }
+
+        body.tema-claro .legenda-cor { border: 1px solid rgba(0,0,0,0.3); }
+
+        body.tema-claro #map-controls button {
+            background: #ffffff;
+            color: #c97a34;
+            border-color: #c97a34;
+        }
+
+        body.tema-claro #map-controls button:hover {
+            background: #c97a34;
+            color: #ffffff;
+        }
+
+        body { background-color: #1a0a05; color: white; margin: 0; overflow: hidden; }
+        header { background: #2a0e05; border-bottom: 2px solid #f56a00; z-index: 10; position: relative; }
+        .node rect { cursor: pointer; stroke-width: 2px; }
+        .node text { font-family: sans-serif; pointer-events: none; }
+        .link { fill: none; stroke-opacity: 0.4; stroke-width: 2px; }
+        .link-highlight {
+            stroke: #00fbff !important;
+            stroke-opacity: 1 !important;
+            stroke-width: 4px !important;
+            filter: drop-shadow(0 0 5px #00fbff);
+        }
+        #tree-container { width: 100vw; height: 90vh; cursor: grab; }
+        #tree-container:active { cursor: grabbing; }
+    </style>
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body id="cladobody">
-    <header class="shadow-sm sticky-top">
-        <nav class="container d-flex justify-content-between align-items-center py-3">
-            <h1 class="title m-0 fs-3">Yggdrasil</h1>
-            <div class="nav-links">
-                <a href="cladograma.html" class="text-white px-3 text-decoration-none">Cladograma</a>
-                <a href="#" class="text-white px-3 text-decoration-none">Sobre</a>
-                <a href="#" class="text-white px-3 text-decoration-none">FAQ</a>
-                <a href="login.html" class="text-white px-3 text-decoration-none">Login/Cadastro</a>
+    <header>
+        <div class="row g-0 align-items-center d-flex p-2">
+            <h1 class="col-sm-3 m-0" style="color: #ff4000; font-weight: bold;">Yggdrasil</h1>
+            <div class="col-sm-6 d-flex gap-2">
+                <input type="text" id="search-input" list="taxons-list" class="form-control bg-dark text-white border-secondary" placeholder="Pesquisar táxon (ex: Primates)...">
+                <datalist id="taxons-list"></datalist>
+                <button onclick="buscarAnimalAleatorio()" class="btn btn-success" title="Ir para um animal aleatório">Aleatório</button>
+                <button onclick="searchNode()" class="btn btn-warning">Buscar</button>
+                <button onclick="recolherTudo()" id="btn-recolher" class="btn btn-outline-light" disabled>Recolher Tudo</button>
             </div>
-        </nav>
+            <div class="col-sm-3 d-flex justify-content-end gap-3 px-3">
+                <span onclick="toggleTema()" style="cursor:pointer; font-size: 1.2rem;" title="Mudar Tema">◓</span>
+                <span style="cursor:pointer">Sobre</span>
+                <span style="cursor:pointer">FAQ</span>
+            </div>
+        </div>
     </header>
+
+    <div id="loader">
+        <div class="spinner"></div>
+        <p>Tecendo os galhos da Yggdrasil...</p>
+    </div>
+
+    <div id="map-controls">
+        <button onclick="zoomIn()" title="Aproximar">+</button>
+        <button onclick="zoomOut()" title="Afastar">-</button>
+        <button onclick="voltarParaRaiz()" title="Voltar para a Raiz" style="font-size: 1rem;">⁜</button>
+    </div>
 
     <main>
         <div id="tree-container"></div>
     </main>
 
+    <div id="legenda">
+        <h4>Níveis Taxonômicos</h4>
+        <div class="legenda-item"><div class="legenda-cor" style="background: #6d4c41;"></div>Classe</div>
+        <div class="legenda-item"><div class="legenda-cor" style="background: #c62828;"></div>Subclasse / Infraclasse</div>
+        <div class="legenda-item"><div class="legenda-cor" style="background: #d84315;"></div>Clado / Coorte</div>
+        <div class="legenda-item"><div class="legenda-cor" style="background: #e65100;"></div>Superordem</div>
+        <div class="legenda-item"><div class="legenda-cor" style="background: #f57c00;"></div>Ordem</div>
+        <div class="legenda-item"><div class="legenda-cor" style="background: #ff9800;"></div>Subordem</div>
+        <div class="legenda-item"><div class="legenda-cor" style="background: #ffb300;"></div>Superfamília</div>
+        <div class="legenda-item"><div class="legenda-cor" style="background: #fbc02d;"></div>Família</div>
+        <div class="legenda-item"><div class="legenda-cor" style="background: #ffee58;"></div>Subfamília</div>
+        <div class="legenda-item"><div class="legenda-cor" style="background: #d4e157;"></div>Tribo</div>
+        <div class="legenda-item"><div class="legenda-cor" style="background: #9ccc65;"></div>Gênero</div>
+        <div class="legenda-item"><div class="legenda-cor" style="background: #388e3c;"></div>Espécie</div>
+    </div>
+
+    <div id="tooltip"></div>
+
     <script>
+        let globalRoot;
+        let globalUpdate;
+        let allExpanded = false;
         const width = window.innerWidth;
-        const height = window.innerHeight * 1.5;
+        const height = window.innerHeight;
+        const colorScale = d3.scaleSequential(d3.interpolateYlOrRd).domain([5, 0]);
+
+        const zoomBehavior = d3.zoom()
+            .scaleExtent([0.1, 3])
+            .on("zoom", (event) => {
+                g.attr("transform", event.transform);
+            });
 
         const svg = d3.select("#tree-container")
             .append("svg")
             .attr("width", "100%")
             .attr("height", "100%")
-            .call(d3.zoom().scaleExtent([0.1, 5]).on("zoom", (event) => {
-                g.attr("transform", event.transform);
-            }))
+            .call(zoomBehavior)
+            .on("dblclick.zoom", null) 
             .append("g");
 
         const g = svg.append("g");
 
-        // Escala de cores (Amarelo para Vermelho) baseada na profundidade
-        const colorScale = d3.scaleSequential(d3.interpolateYlOrRd).domain([5, 0]);
+        const WIKI_OVERRIDES = {
+            "Pan": "Pan_(género)",
+            "Pongo": "Orangotango",
+            "Homo": "Homo" 
+        };
 
-        async function loadData() {
-            const apiURL = 'https://www.onezoom.org/OZ_API.php?action=get_json&ott_id=306454&max_depth=2';
-            const proxyURL = `https://api.allorigins.win/get?url=${encodeURIComponent(apiURL)}`;
+        const TAXON_MAP = {
+            "ott244265": { name: "Mamíferos", rank: "classe" },
+            "ott962395": { name: "Prototheria", rank: "subclasse" },
+            "ott962396": { name: "Monotremata", rank: "infraclasse" },
+            "ott229558": { name: "Theria", rank: "subclasse" },
+            "ott16033": { name: "Marsupiais", rank: "infraclasse" },
+            "ott683263": { name: "Placentalia", rank: "infraclasse" },
+            "ott913935": { name: "Primates", rank: "ordem" },
+            "ott44565": { name: "Carnivora", rank: "ordem" },
+            "ott864593": { name: "Rodentia", rank: "ordem" },
+            "ott622916": { name: "Cetartiodactyla", rank: "ordem" },
+            "ott5334778": { name: "Boreoeutheria", rank: "clado" },
+            "ott6520513": { name: "Atlantogenata", rank: "clado" },
+            "ott392220": { name: "Glires", rank: "grandord" },
+            "ott6520519": { name: "Primatomorpha", rank: "mirord" },
+            "ott839752": { name: "Muroidea", rank: "superfam" },
+            "ott987673": { name: "Colugos", rank: "ordem" },
+            "ott847764": { name: "Xenartos", rank: "superord" },
+            "ott746703": { name: "Afrotheria", rank: "clade" },
+            "ott3616708": { name: "Afrosoricida", rank: "ordem" },
+            "ott54168": { name: "Chrysochloridae", rank: "superfam" },
+            "ott796652": { name: "Tenrecidae", rank: "superfam" },
+        };
 
-            try {
-                const response = await fetch(proxyURL);
-                if (!response.ok) throw new Error("Erro na rede");
-                
-                const wrapper = await response.json();
-                const data = JSON.parse(wrapper.contents);
+        const EXCLUDED_NODES = [
+            "ott4943691","ott4119276","ott4944065", 
+            "ott4944060","ott6143046","ott4943696","ott5744150","ott5744150","ott6143254",
+            "ott4119273","ott4943688","ott3615207","ott3615209","ott4119275","ott3615202",
+            "ott3615203","ott3615200","ott3615200","ott3617743","ott79623","ott3615211",
+            "ott3615213","ott4145970","ott5327128","ott5327063","ott5327108","ott852222",
+            "ott6143352","ott4944058","ott3615453","ott3616648","ott3616298","ott3616382",
+            "ott4144457","ott3616718","ott5744152","ott4943461","ott4943474","ott4943486",
+            "ott4943533","ott3607434","ott3607404","ott3607411","ott3607405","ott3607413",
+            "ott3607422","ott3607417","ott6147610","ott4119265","ott4119259","ott4119251",
+            "ott4119270","ott4119267","ott6147524","ott7657020","ott7657018","ott3617421",
+            "ott3616024","ott7657009","ott4943523","ott6143978","ott6143960","ott6143958",
+            "ott4943230","ott363391","ott5327092","ott5327092","ott3607169","ott901682",
+            "ott106255","ott3607164","ott3607167","ott3607166","ott3607165","ott3615912",
+            "ott7655792","ott5991566","ott5991567","ott5268881","ott3607209",
+            "","","","","","",
+        ];
 
-                const formatData = (obj) => {
-                    if (obj.child) {
-                        obj.children = obj.child;
-                        delete obj.child;
-                        obj.children.forEach(formatData);
-                    }
-                    obj.name = obj.n || obj.scientific_name || obj.name || "Taxon";
-                };
+        const DICIONARIO_POPULAR = {
+    // Felinos e Canídeos
+    "leão": "Panthera leo", "tigre": "Panthera tigris", "gato": "Felis catus", 
+    "cachorro": "Canis lupus familiaris", "cão": "Canis lupus familiaris", 
+    "lobo": "Canis lupus", "onça": "Panthera onca", "leopardo": "Panthera pardus", 
+    "guepardo": "Acinonyx jubatus", "hiena": "Hyaenidae", "raposa": "Vulpes",
+    // Primatas
+    "humano": "Homo sapiens", "homem": "Homo sapiens", "macaco": "Primates", 
+    "gorila": "Gorilla", "chimpanzé": "Pan", "orangotango": "Pongo", "lêmure": "Lemuriformes",
+    // Ursos e outros carnívoros
+    "urso": "Ursidae", "urso polar": "Ursus maritimus", "urso-polar": "Ursus maritimus",
+    "panda": "Ailuropoda melanoleuca", "guaxinim": "Procyon",
+    // Herbívoros de grande porte
+    "elefante": "Proboscidea", "rinoceronte": "Rhinocerotidae", "girafa": "Giraffa", 
+    "hipopótamo": "Hippopotamus amphibius", "cavalo": "Equidae", "zebra": "Equus",
+    "camelo": "Camelus", "lhama": "Lama glama", "veado": "Cervidae", "alce": "Alces alces",
+    // Animais de fazenda
+    "boi": "Bos taurus", "vaca": "Bos taurus", "ovelha": "Ovis aries", "cabra": "Capra hircus", 
+    "porco": "Sus domesticus", "javali": "Sus scrofa",
+    // Roedores e Lagomorfos
+    "rato": "Rattus", "camundongo": "Mus musculus", "capivara": "Hydrochoerus hydrochaeris", 
+    "esquilo": "Sciuridae", "castor": "Castor", "coelho": "Leporidae", "lebre": "Lepus",
+    // Mamíferos marinhos
+    "baleia": "Cetacea", "golfinho": "Delphinidae", "orca": "Orcinus orca", 
+    "foca": "Phocidae", "leão-marinho": "Otariidae", "morsa": "Odobenus rosmarus",
+    // Marsupiais e Monotremados
+    "canguru": "Macropodidae", "coala": "Phascolarctos cinereus", "gambá": "Didelphidae",
+    "ornitorrinco": "Ornithorhynchus anatinus", "équidna": "Tachyglossidae",
+    // Outros
+    "morcego": "Chiroptera", "tatu": "Dasypodidae", "preguiça": "Folivora", "tamanduá": "Vermilingua"
+};
 
-                formatData(data);
-                renderTree(data);
-            } catch (error) {
-                console.warn("Usando dados locais de fallback devido a erro na API.");
-                renderTree(getExemploLocal());
+        function showLoader() { document.getElementById('loader').style.display = 'flex'; }
+        function hideLoader() { document.getElementById('loader').style.display = 'none'; }
+
+        function parseNewick(newickString) {
+            var ancestors = [];
+            var tree = {};
+            var tokens = newickString.split(/\s*(;|\(|\)|,|:)\s*/);
+            for (var i = 0; i < tokens.length; i++) {
+                var token = tokens[i];
+                if (!token) continue;
+                switch (token) {
+                    case '(': 
+                        var subtree = {};
+                        tree.children = [subtree];
+                        ancestors.push(tree);
+                        tree = subtree;
+                        break;
+                    case ',': 
+                        var subtree = {};
+                        ancestors[ancestors.length - 1].children.push(subtree);
+                        tree = subtree;
+                        break;
+                    case ')': 
+                        tree = ancestors.pop();
+                        break;
+                    case ':': 
+                        break;
+                    default:
+                        var prevToken = tokens[i - 1];
+                        if (prevToken == ')' || prevToken == '(' || prevToken == ',') {
+                            tree.name = token.replace(/^'|'$/g, ""); 
+                        }
+                }
             }
+            return tree;
         }
 
-// ... (mantenha as constantes de SVG e colorScale anteriores)
+        function formatTaxonomyTree(node, isRoot = false) {
+            if (!node) return null;
 
-        function renderTree(data) {
-            let i = 0;
-            const duration = 750; // Velocidade da animação
-            let root = d3.hierarchy(data);
-            root.x0 = width / 2;
-            root.y0 = 0;
+            let rawName = node.name || "";
+            let cleanName = rawName.replace(/_/g, " ");
+            let nodeId = "";
 
-            // Fecha todos os nós após o primeiro nível inicialmente
-            if (root.children) {
-                root.children.forEach(collapse);
+            let match = cleanName.match(/(.+) ott(\d+)/);
+            if (match) {
+                cleanName = match[1].trim();
+                nodeId = "ott" + match[2];
+            } else if (cleanName.match(/^(ott|mrca)\d+$/)) {
+                nodeId = cleanName;
             }
 
-            update(root);
+            let mapData = TAXON_MAP[nodeId];
+            if (mapData) cleanName = mapData.name;
 
-            function collapse(d) {
-                if (d.children) {
-                    d._children = d.children;
-                    d._children.forEach(collapse);
-                    d.children = null;
+            const isGarbage = cleanName.toLowerCase().includes("environmental") || 
+                              cleanName.toLowerCase().includes("unclassified") || 
+                              cleanName.includes(" x ") || cleanName.includes("sp.");
+            
+            if (isGarbage || EXCLUDED_NODES.includes(nodeId) || EXCLUDED_NODES.includes(cleanName)) return null;
+
+            const isGhost = cleanName.includes("subclass") || cleanName.includes("Deuterostomia") || cleanName.startsWith("mrca");
+
+            let validChildren = [];
+            if (node.children && Array.isArray(node.children)) {
+                for (let child of node.children) {
+                    let result = formatTaxonomyTree(child, false);
+                    if (result) {
+                        if (result.isGhost) {
+                            if (result.children) validChildren.push(...result.children);
+                        } else {
+                            validChildren.push(result);
+                        }
+                    }
                 }
             }
 
-            function update(source) {
-                const treeData = d3.tree().size([width, height])(root);
+            if (isGhost) {
+                return { isGhost: true, children: validChildren };
+            }
+
+            if (isRoot) {
+                cleanName = "Mamíferos";
+                validChildren = validChildren.filter(c => ["Theria", "Prototheria"].includes(c.name));
+            }
+
+            validChildren.sort((a, b) => (b.isMajor ? 1 : 0) - (a.isMajor ? 1 : 0));
+
+            return {
+                id: nodeId, 
+                name: cleanName,
+                rank: mapData ? (mapData.rank || "desconhecido") : "desconhecido",
+                isMajor: isRoot || !!mapData,
+                children: validChildren.length > 0 ? validChildren : undefined
+            };
+        }
+
+        async function loadData() {
+            showLoader();
+            try {
+                let rootData = {
+                    id: "ott244265", name: "Mamíferos", rank: "classe", isMajor: true,
+                    _childrenCarregados: true, 
+                    children: [
+                        { id: "ott962395", name: "Prototheria", rank: "subclasse", isMajor: true, _childrenCarregados: false },
+                        { id: "ott229558", name: "Theria", rank: "subclasse", isMajor: true, _childrenCarregados: false }
+                    ]
+                };
+
+                renderTree(rootData);
+                updateSearchSuggestions();
+            } catch (error) {
+                console.error("Erro na inicialização:", error);
+                renderTree(getExemploLocal());
+            } finally {
+                hideLoader();
+            }
+        }
+
+        function updateSearchSuggestions() {
+            if (!globalRoot) return;
+            const datalist = document.getElementById('taxons-list');
+            const nodes = globalRoot.descendants();
+            const names = [...new Set(nodes.map(d => d.data.name))].sort();
+            
+            let optionsHTML = names.map(name => `<option value="${name}">`).join('');
+            for (let apelido in DICIONARIO_POPULAR) {
+                optionsHTML += `<option value="${apelido}">`;
+            }
+            datalist.innerHTML = optionsHTML;
+        }
+
+        async function carregarFilhosDaAPI(d) {
+            if (d.data._childrenCarregados) return true;
+
+            if (d.data.name === "Homo") {
+                let childNode = d3.hierarchy({
+                    id: "ott770315", 
+                    name: "Homo sapiens",
+                    rank: "species",
+                    isMajor: true,
+                    _childrenCarregados: true 
+                });
+                childNode.depth = d.depth + 1;
+                childNode.parent = d;
+                
+                d.children = [childNode];
+                d.data._childrenCarregados = true;
+                updateSearchSuggestions();
+                globalUpdate(d);
+                return true;
+            }
+
+            showLoader();
+            let ottId = parseInt(d.data.id.replace("ott", ""));
+
+            try {
+                const response = await fetch('https://api.opentreeoflife.org/v3/taxonomy/taxon_info', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ "ott_id": ottId, "include_children": true })
+                });
+
+                if (!response.ok) throw new Error("Erro na API");
+
+                const taxonInfo = await response.json();
+
+                if (taxonInfo.children && taxonInfo.children.length > 0) {
+                    const validChildren = taxonInfo.children.filter(child => {
+                        let childOtt = "ott" + child.ott_id;
+                        let cName = child.name.toLowerCase();
+                        
+                        let isExtinct = child.flags && child.flags.includes("extinct");
+                        let isGarbage = cName.includes("environmental") || cName.includes("unclassified") || cName.includes(" x ") || cName.includes("sp.");
+                        
+                        return !isGarbage && !isExtinct && !EXCLUDED_NODES.includes(childOtt) && !EXCLUDED_NODES.includes(child.name);
+                    });
+
+                    const promessasWiki = validChildren.map(async (child) => {
+                        let rankDoFilho = child.rank ? child.rank.toLowerCase() : "desconhecido";
+                        
+                        if (rankDoFilho.includes("class") || rankDoFilho.includes("ord")) {
+                            return child;
+                        }
+
+                        try {
+                            let nomeBusca = WIKI_OVERRIDES[child.name] || child.name;
+                            nomeBusca = nomeBusca.replace(/ /g, "_");
+                            let wikiResp = await fetch(`https://pt.wikipedia.org/api/rest_v1/page/summary/${nomeBusca}`);
+                            if (wikiResp.ok) {
+                                let wikiData = await wikiResp.json();
+                                if (wikiData.type !== "no-summary") return child; 
+                            }
+                        } catch (e) { 
+                            return child; 
+                        }
+                        return null; 
+                    });
+
+                    const resultados = await Promise.all(promessasWiki);
+                    const sobreviventesDaWiki = resultados.filter(c => c !== null);
+
+                    if (sobreviventesDaWiki.length > 0) {
+                        const newChildren = sobreviventesDaWiki.map(child => {
+                            let childOtt = "ott" + child.ott_id;
+                            let mapData = TAXON_MAP[childOtt]; 
+                            let rankFinal = mapData ? mapData.rank : (child.rank || "desconhecido");
+                            let ehEspecie = (rankFinal.toLowerCase().includes("species") || rankFinal.toLowerCase().includes("especie"));
+
+                            let childNode = d3.hierarchy({
+                                id: childOtt,
+                                name: mapData ? mapData.name : child.name,
+                                rank: rankFinal,
+                                isMajor: !!mapData,
+                                _childrenCarregados: ehEspecie
+                            });
+                            childNode.depth = d.depth + 1;
+                            childNode.parent = d;
+                            return childNode;
+                        });
+
+                        d.children = newChildren;
+                        d.data._childrenCarregados = true; 
+                        updateSearchSuggestions();
+                        return true;
+                    } else {
+                        d.data._childrenCarregados = true; 
+                        return false;
+                    }
+                } else {
+                    d.data._childrenCarregados = true; 
+                    return false;
+                }
+            } catch (error) {
+                console.error(error); return false;
+            } finally {
+                hideLoader();
+                globalUpdate(d);
+            }
+        }
+
+        function renderTree(data) {
+            let i = 0;
+            const duration = 750;
+            const tooltip = d3.select("#tooltip");
+            let hideTimeout;
+
+            globalRoot = d3.hierarchy(data);
+            globalRoot.x0 = width / 2;
+            globalRoot.y0 = 0;
+
+            function collapse(d) {
+                if (d.children) { 
+                    d._children = d.children; 
+                    d._children.forEach(collapse); 
+                    d.children = null; 
+                }
+            }
+
+            if (globalRoot.children) {
+                globalRoot.children.forEach(child => {
+                    if (child.children) {
+                        child.children.forEach(collapse); 
+                        child._children = child.children;
+                        child.children = null; 
+                    }
+                });
+            }
+
+            globalUpdate = function update(source) {
+                const treeLayout = d3.tree().nodeSize([180, 280]);
+                const treeData = treeLayout(globalRoot);
                 const nodes = treeData.descendants();
                 const links = treeData.links();
+                
+                const hideTooltip = () => {
+                    hideTimeout = setTimeout(() => { d3.select("#tooltip").style("display", "none"); }, 300);
+                };
 
-                nodes.forEach(d => { d.y = d.depth * 180 }); // Distância entre níveis
+                function getNodeColor(d) {
+                    let rank = d.data.rank ? d.data.rank.toLowerCase() : "";
+                    
+                    // NÍVEL 1: Acima de Classe, se houver Reino, Filo...
+                    if (rank.includes("domain") || rank.includes("king") || rank.includes("rein") || rank.includes("phyl") || rank.includes("filo")) return "#4a148c";
+                    
+                    // NÍVEL 2: Classes 
+                    if (rank.includes("subclass") || rank.includes("infraclass") || rank.includes("parvclass") || rank.includes("superclass")) return "#c62828"; 
+                    if (rank === "class" || rank === "classe") return "#6d4c41"; 
+                    
+                    // NÍVEL 3: Clados Estruturais e Coortes
+                    if (rank.includes("clade") || rank.includes("clado") || rank.includes("cohort") || rank.includes("coort") || rank.includes("legion") || rank.includes("legiã")) return "#d84315";
+                    
+                    // NÍVEL 4: Ordens 
+                    if (rank.includes("magnord") || rank.includes("superord") || rank.includes("grandord") || rank.includes("mirord")) return "#e65100"; 
+                    if (rank === "order" || rank === "ordem") return "#f57c00"; 
+                    if (rank.includes("subord") || rank.includes("infraord") || rank.includes("parvord")) return "#ff9800"; 
+                    
+                    // NÍVEL 5: Famílias 
+                    if (rank.includes("superfam") || rank.includes("epifam")) return "#ffb300"; 
+                    if (rank === "family" || rank === "familia" || rank === "família") return "#fbc02d"; 
+                    if (rank.includes("subfam") || rank.includes("infrafam")) return "#ffee58"; 
+                    
+                    // NÍVEL 6: Tribos 
+                    if (rank.includes("trib")) return "#d4e157"; 
+                    
+                    // NÍVEL 7: Gêneros 
+                    if (rank === "genus" || rank === "genero" || rank === "gênero") return "#9ccc65"; 
+                    if (rank.includes("gen") || rank.includes("gên")) return "#7cb342"; 
+                    
+                    // NÍVEL 8: Espécies 
+                    if (rank.includes("spec") || rank.includes("espéc") || rank.includes("subsp") || rank.includes("var") || rank.includes("form")) return "#388e3c";
+                    
+                    // NÍVEL 9: Nós sem Rank 
+                    return "#5d4037"; 
+                }
 
-                // --- NÓS ---
+                d3.select("#tooltip")
+                    .on('mouseenter', () => clearTimeout(hideTimeout))
+                    .on('mouseleave', hideTooltip);
+
+                nodes.forEach(d => { d.y = d.depth * 250 });
+
                 const node = g.selectAll('g.node')
                     .data(nodes, d => d.id || (d.id = ++i));
 
                 const nodeEnter = node.enter().append('g')
                     .attr('class', 'node')
                     .attr('transform', d => `translate(${source.x0},${source.y0})`)
-                    .on('click', (event, d) => {
-                        // Clique único: Expandir/Recolher
-                        if (d.children) {
-                            d._children = d.children;
-                            d.children = null;
-                        } else {
-                            d.children = d._children;
-                            d._children = null;
+                    .on('click', async (event, d) => {
+                        document.getElementById('btn-recolher').removeAttribute('disabled');
+                        if (d.children) { 
+                            d._children = d.children; d.children = null; globalUpdate(d); return;
+                        } 
+                        if (d._children) {
+                            d.children = d._children; d._children = null; globalUpdate(d); return;
                         }
-                        update(d);
-                    })
-                    .on('dblclick', (event, d) => {
-                        // Clique duplo: Wikipédia
-                        const term = d.data.name.replace(" ", "_");
-                        window.open(`https://pt.wikipedia.org/wiki/${term}`, '_blank');
-                    });
 
+                        if (!d.data.id || !d.data.id.startsWith("ott")) {
+                            alert("ID inválido."); return;
+                        }
+
+                        let sucesso = await carregarFilhosDaAPI(d);
+                        if (!sucesso && !d.data._childrenCarregados) alert("Não foi possível carregar mais ramificações.");
+                    })
+
+                    .on('dblclick', (event, d) => {
+                        event.stopPropagation(); 
+                        const scale = 1.3;
+                        const tx = width / 2 - d.x * scale;
+                        const ty = height / 2 - d.y * scale;
+                        
+                        d3.select("svg").transition().duration(800).call(
+                            zoomBehavior.transform, 
+                            d3.zoomIdentity.translate(tx, ty).scale(scale)
+                        );
+                    })
+                    .on('mouseenter', async (event, d) => {
+                        clearTimeout(hideTimeout);
+                        tooltip.style("display", "block")
+                            .style("left", (event.pageX + 15) + "px")
+                            .style("top", (event.pageY - 20) + "px")
+                            .html("<em>Carregando...</em>");
+
+                        try {
+                            let nomeBusca = WIKI_OVERRIDES[d.data.name] || d.data.name;
+                            const response = await fetch(`https://pt.wikipedia.org/api/rest_v1/page/summary/${nomeBusca}`);
+                            const wikiData = await response.json();
+                            
+                            const idTag = `<hr style="margin: 8px 0; border-color: #f56a00;"><div style="text-align: center; font-size: 0.8rem; color: #ffeb3b;">ID do Nó: <b>${d.data.id || "Sem ID"}</b></div>`;
+                            
+                            if (wikiData.title && wikiData.type !== "no-summary") {
+                                tooltip.html(`
+                                    ${wikiData.thumbnail ? `<img src="${wikiData.thumbnail.source}">` : ''}
+                                    <h3>${wikiData.title}</h3>
+                                    <p>${wikiData.extract}</p>
+                                    <a class="wiki-link" href="${wikiData.content_urls.desktop.page}" target="_blank">Ver na Wikipedia →</a>
+                                    ${idTag}
+                                `);
+                            } else {
+                                tooltip.html(`<h3>${d.data.name}</h3><p>Resumo não encontrado na Wikipedia.</p>${idTag}`);
+                            }
+                        } catch (err) { 
+                            tooltip.html(`Erro ao carregar dados.<br><hr style="margin: 8px 0; border-color: #f56a00;"><div style="text-align: center; font-size: 0.8rem; color: #ffeb3b;">ID do Nó: <b>${d.data.id || "Sem ID"}</b></div>`); 
+                        }
+                    })
                 nodeEnter.append('rect')
-                    .attr('width', 120)
-                    .attr('height', 30)
-                    .attr('x', -60)
-                    .attr('y', -15)
-                    .attr('fill', d => d._children ? "#ff4400" : "#2a0e05") // Cor muda se tiver filhos escondidos
-                    .attr('stroke', d => colorScale(d.depth));
+                    .attr('width', 140).attr('height', 35).attr('x', -70).attr('y', -17).attr('rx', 5)
+                    .attr('fill', getNodeColor) 
+                    .attr('stroke', d => d.data._childrenCarregados === false ? "#ffffff" : colorScale(d.depth))
+                    .attr('stroke-width', d => d.data._childrenCarregados === false ? 2.5 : 1);
 
                 nodeEnter.append('text')
-                    .attr('dy', 5)
-                    .attr('text-anchor', 'middle')
+                    .attr('dy', 5).attr('text-anchor', 'middle')
+                    .attr('fill', d => {
+                        let rank = d.data.rank ? d.data.rank.toLowerCase() : "";
+                        
+                        const fundosClaros = ['fam', 'trib', 'gen', 'gên', 'subord', 'infraord', 'parvord'];
+                        if (fundosClaros.some(termo => rank.includes(termo))) return '#000000';
+                        
+                        return '#ffffff';
+                    })
+                    .style('font-size', '12px').style('font-weight', 'bold')
                     .text(d => d.data.name);
 
-                // Transição dos nós para a posição correta
                 const nodeUpdate = nodeEnter.merge(node);
-                nodeUpdate.transition().duration(duration)
-                    .attr('transform', d => `translate(${d.x},${d.y})`);
+                nodeUpdate.transition().duration(duration).attr('transform', d => `translate(${d.x},${d.y})`);
+                
+                nodeUpdate.select('rect')
+                    .attr('fill', getNodeColor)
+                    .attr('stroke', d => d.data._childrenCarregados === false ? "#ffffff" : colorScale(d.depth))
+                    .attr('stroke-width', d => d.data._childrenCarregados === false ? 2.5 : 1);
 
-                // --- LINKS ---
-                const link = g.selectAll('path.link')
-                    .data(links, d => d.target.id);
-
+                const link = g.selectAll('path.link').data(links, d => d.target.id);
                 const linkEnter = link.enter().insert('path', 'g')
-                    .attr('class', 'link')
-                    .attr('stroke', d => colorScale(d.source.depth))
-                    .attr('d', d3.linkVertical()
-                        .x(d => source.x0)
-                        .y(d => source.y0));
+                    .attr('class', 'link').attr('stroke', d => colorScale(d.source.depth))
+                    .attr('d', d3.linkVertical().x(d => source.x0).y(d => source.y0));
 
                 linkEnter.merge(link).transition().duration(duration)
-                    .attr('d', d3.linkVertical()
-                        .x(d => d.x)
-                        .y(d => d.y));
+                    .attr('d', d3.linkVertical().x(d => d.x).y(d => d.y));
 
-                // Saindo: Remove nós e links suavemente
-                node.exit().transition().duration(duration)
-                    .attr('transform', d => `translate(${source.x},${source.y})`).remove();
+                node.exit().transition().duration(duration).attr('transform', d => `translate(${source.x},${source.y})`).remove();
+                link.exit().transition().duration(duration).attr('d', d3.linkVertical().x(d => source.x).y(d => source.y)).remove();
+
+                nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
+            };
+
+            globalUpdate(globalRoot);
+        }
+
+        function recolherTudo() {
+            if (!globalRoot) return;
+
+            function fecharGavetas(d) {
+                    if (d.children) {
+                        d._children = d.children;
+                        d._children.forEach(fecharGavetas);
+                        d.children = null;
+                    } else if (d._children) {
+                        d._children.forEach(fecharGavetas);
+                    }
+                }
+
+                if (globalRoot.children) {
+                    globalRoot.children.forEach(fecharGavetas);
+                } else if (globalRoot._children) {
+                    globalRoot.children = globalRoot._children;
+                    globalRoot._children = null;
+                    globalRoot.children.forEach(fecharGavetas);
+                }
+
+                globalUpdate(globalRoot);
                 
-                link.exit().transition().duration(duration)
-                    .attr('d', d3.linkVertical().x(d => source.x).y(d => source.y)).remove();
+                if (typeof voltarParaRaiz === "function") {
+                    voltarParaRaiz();
+                }
+                
+                document.getElementById('btn-recolher').setAttribute('disabled', 'true');
+            }
 
-                // Guarda as posições antigas para a próxima animação
-                nodes.forEach(d => {
-                    d.x0 = d.x;
-                    d.y0 = d.y;
+        async function searchNode() {
+            let term = document.getElementById('search-input').value.toLowerCase().trim();
+            if (!term || !globalRoot) return;
+            if (DICIONARIO_POPULAR[term]) term = DICIONARIO_POPULAR[term].toLowerCase();
+
+            showLoader();
+            document.querySelector("#loader p").innerText = "Buscando...";
+
+            try {
+                const tnrsResp = await fetch('https://api.opentreeoflife.org/v3/tnrs/match_names', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ names: [term] })
                 });
+                const tnrsData = await tnrsResp.json();
+
+                if (!tnrsData.results || tnrsData.results.length === 0 || tnrsData.results[0].matches.length === 0) {
+                    alert("Táxon não encontrado no banco de dados da API."); hideLoader(); return;
+                }
+                const targetOttId = tnrsData.results[0].matches[0].taxon.ott_id;
+
+                const taxResp = await fetch('https://api.opentreeoflife.org/v3/taxonomy/taxon_info', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ott_id: targetOttId, include_lineage: true })
+                });
+                const taxData = await taxResp.json();
+                if (!taxData.lineage) { alert("Não foi possível traçar a rota."); hideLoader(); return; }
+
+                const caminho = taxData.lineage.map(l => "ott" + l.ott_id).reverse();
+                caminho.push("ott" + targetOttId);
+
+                let atual = globalRoot;
+                for (let i = 0; i < caminho.length; i++) {
+                    let passoId = caminho[i];
+                    if (passoId === "ott244265") continue; 
+
+                    if (!atual.data._childrenCarregados) {
+                        await carregarFilhosDaAPI(atual);
+                    } else if (atual._children) {
+                        atual.children = atual._children; atual._children = null;
+                    }
+
+                    if (atual.children) {
+                        let proximo = atual.children.find(c => c.data.id === passoId);
+                        if (proximo) atual = proximo;
+                    }
+                }
+
+                globalUpdate(globalRoot);
+                d3.selectAll('.link').classed('link-highlight', false);
+
+                const ancestors = atual.ancestors().reverse();
+                ancestors.forEach((node, idx) => {
+                    if (idx === 0) return;
+                    setTimeout(() => {
+                        d3.selectAll('.link').filter(l => l.target.id === node.id).classed('link-highlight', true);
+                    }, idx * 150);
+                });
+
+                setTimeout(() => {
+                    const scale = 1.2;
+                    const tx = width / 2 - atual.x * scale;
+                    const ty = height / 2 - atual.y * scale;
+                    d3.select("svg").transition().duration(1000).call(zoomBehavior.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+                }, 200);
+
+            } catch (error) {
+                console.error(error); alert("Erro durante a busca teleguiada.");
+            } finally {
+                document.querySelector("#loader p").innerText = "Tecendo os galhos da Yggdrasil...";
+                hideLoader();
             }
         }
 
-        // Função que faltava para o código não dar erro
+        document.getElementById('search-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') searchNode(); });
+        function zoomIn() {
+            d3.select("svg").transition().duration(300).call(zoomBehavior.scaleBy, 1.3);
+        }
+
+        function zoomOut() {
+            d3.select("svg").transition().duration(300).call(zoomBehavior.scaleBy, 1 / 1.3);
+        }
+
+        function voltarParaRaiz() {
+            if (!globalRoot) return;
+            const scale = 1;
+            const tx = width / 2 - globalRoot.x * scale;
+            const ty = 80 - globalRoot.y * scale; 
+            
+            d3.select("svg").transition().duration(1000).call(
+                zoomBehavior.transform, 
+                d3.zoomIdentity.translate(tx, ty).scale(scale)
+            );
+        }   
+
+        function buscarAnimalAleatorio() {
+            document.getElementById('btn-recolher').removeAttribute('disabled');
+            
+            const especies = [
+                "Panthera leo", /* Leão */
+                "Panthera tigris", /* Tigre */
+                "Felis catus", /* Gato */
+                "Canis lupus familiaris", /* Cachorro */
+                "Panthera onca", /* Onça-pintada */
+                "Acinonyx jubatus", /* Guepardo */
+                "Homo sapiens", /* Humano */
+                "Ursus maritimus", /* Urso-polar */
+                "Ailuropoda melanoleuca", /* Panda-gigante */
+                "Hippopotamus amphibius", /* Hipopótamo */
+                "Giraffa camelopardalis", /* Girafa */
+                "Bos taurus", /* Vaca */
+                "Sus scrofa", /* Javali */
+                "Mus musculus", /* Camundongo */
+                "Hydrochoerus hydrochaeris", /* Capivara */
+                "Orcinus orca", /* Orca */
+                "Phascolarctos cinereus", /* Coala */
+                "Ornithorhynchus anatinus", /* Ornitorrinco */
+                "Gorilla gorilla", /* Gorila */
+                "Pan troglodytes", /* Chimpanzé */
+                "Pongo pygmaeus", /* Orangotango */
+                "Loxodonta africana", /* Elefante-africano */
+                "Equus caballus", /* Cavalo */
+                "Balaenoptera musculus", /* Baleia-azul */
+                "Bradypus tridactylus" /* Preguiça-de-três-dedos */
+            ];
+
+            const animalAleatorio = especies[Math.floor(Math.random() * especies.length)];
+
+            let nomeParaMostrar = animalAleatorio;
+            for (let apelido in DICIONARIO_POPULAR) {
+                if (DICIONARIO_POPULAR[apelido] === animalAleatorio) {
+                    nomeParaMostrar = apelido.charAt(0).toUpperCase() + apelido.slice(1);
+                    break;
+                }
+            }
+
+            document.getElementById('search-input').value = nomeParaMostrar;
+            searchNode();
+        }
+
+        function toggleTema() {
+            document.body.classList.toggle('tema-claro');
+        }   
+
         function getExemploLocal() {
             return {
-                name: "Mammalia",
+                name: "Mamíferos OFFLINE", rank: "classe",
                 children: [
-                    {
-                        name: "Monotremata",
-                        children: [{ name: "Ornithorhynchidae" }, { name: "Tachyglossidae" }]
-                    },
-                    {
-                        name: "Theria",
-                        children: [
-                            { 
-                                name: "Marsupialia", 
-                                children: [{ name: "Didelphimorphia" }, { name: "Diprotodontia" }] 
-                            },
-                            { 
-                                name: "Placentalia", 
-                                children: [
-                                    { name: "Rodentia" },
-                                    { name: "Primates" },
-                                    { name: "Carnivora" },
-                                    { name: "Cetartiodactyla" }
-                                ] 
-                            }
-                        ]
-                    }
+                    { name: "Monotremata", rank: "ordem", children: [{ name: "Ornithorhynchidae", rank: "familia" , children: [{ name: "Ornithorhynchus anatinus", rank: "especie" }]}] },
+                    { name: "Theria", rank: "infraclasse", children: [
+                        { name: "Marsupialia", rank: "infraclasse", children: [{ name: "Didelphimorphia", rank: "ordem" }] },
+                        { name: "Placentalia", rank: "infraclasse", children: [{ name: "Primates", rank: "ordem" , children: [{ name: "Lemuriformes", rank: "familia"}]}] }
+                    ]}
                 ]
             };
         }
