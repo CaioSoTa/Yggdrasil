@@ -2,11 +2,11 @@
 $host = "localhost";
 $user = "root";
 $pass = "";
-$db = "yggdrasil_db";
+$db = "usuarios_yggdrasil";
 
 $conn = mysqli_connect($host, $user, $pass, $db);
 
-if(!$coon) {
+if(!$conn) {
     die("Erro na conexão: " . mysqli_connect_error());
 
 }

@@ -27,21 +27,20 @@
                 <div class="card shadow-lg">
                     <div class="card-body p-5">
                         <h2 class="card-title text-center mb-4">Login</h2>
-                        <form>
+                        <form action="login.php" method="POST">
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="email" placeholder="seu@email.com">
+                                <input type="email" class="form-control" id="email" name="email" placeholder="seu@email.com" required>
                             </div>
                             <div class="mb-3">
                                 <label for="password" class="form-label">Senha</label>
-                                <input type="password" class="form-control" id="password" placeholder="Senha">
+                                <input type="password" class="form-control" id="password" name="password" placeholder="Senha" required>
                             </div>
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-success btn-lg">Entrar</button>
                             </div>
                             <hr class="my-4">
-                            <p class="text-center">Não tem uma conta? <a href="#">Cadastre-se</a></p>
-                        </form>
+                            <p class="text-center">Não tem uma conta? <a href="../bd/cadastro.php">Cadastre-se</a></p>                        </form>
                     </div>
                 </div>
             </div>
