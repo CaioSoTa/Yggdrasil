@@ -6,20 +6,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = mysqli_real_escape_string($conn, $_POST['email']);
     $senha = $_POST['password'];
 
-    // Nome da tabela já corrigido aqui também!
     $sql = "SELECT * FROM usuarios_ygg WHERE email = '$email'";
     $result = mysqli_query($conn, $sql);
     
-    // Verifica se encontrou alguém e joga os dados na variável
     if ($result && mysqli_num_rows($result) > 0) {
         $usuario = mysqli_fetch_assoc($result);
         
-        // Verifica a criptografia da senha
         if (password_verify($senha, $usuario['senha'])) {
             $_SESSION['usuario_id'] = $usuario['id'];
             $_SESSION['usuario_nome'] = $usuario['nome'];
+            $_SESSION['usuario_email'] = $usuario['email'];
             
-            // Login deu certo! Vai para o cladograma
             header("Location: ../pages/cladograma.html"); 
             exit();
         } else {
