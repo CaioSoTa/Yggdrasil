@@ -86,13 +86,11 @@
             font-family: sans-serif;
         }
         
-                /* Cor para o modo Escuro (Padrão) */
         #search-input::placeholder {
             color: rgba(255, 255, 255, 0.7); 
             opacity: 1;
         }
 
-        /* Cor para o modo Claro */
         body.tema-claro #search-input::placeholder {
             color: #6c757d; 
         }
@@ -142,8 +140,6 @@
             border-color: #ccc !important;
         }
 
-        /*Recolher Tudo*/
-
         body.tema-claro #btn-recolher {
             background: #c97a34;
             color: #ffffff;
@@ -188,7 +184,7 @@
 <body id="cladobody">
     <header>
         <div class="row g-0 align-items-center d-flex p-2">
-            <h1 class="col-sm-3 m-0" style="color: #ff4000; font-weight: bold;">Yggdrasil</h1>
+            <a href="home.php" class="col-sm-3 m-0" style="color: #ff4000; font-weight: bold; font-size: 32px; text-decoration: none;">Yggdrasil</a>
             <div class="col-sm-6 d-flex gap-2">
                 <input type="text" id="search-input" list="taxons-list" class="form-control bg-dark text-white border-secondary" placeholder="Pesquisar táxon (ex: Primates)..." style="color: white;">
 

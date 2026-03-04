@@ -1,3 +1,14 @@
+<div class="nav-links d-flex align-items-center">
+    <a href="cladograma.html" class="text-white px-3 text-decoration-none">Cladograma</a>
+    
+    <?php if(isset($_SESSION['usuario_id'])): ?>
+        <?php else: ?>
+        <a href="/Yggdrasil/bd/login.php" class="text-white px-3 text-decoration-none fw-bold">Login/Cadastro</a>
+    <?php endif; ?>
+</div>
+<?php
+session_start();
+?>
 <!doctype html>
 <html lang="pt-br">
     <head>
@@ -14,12 +25,39 @@
     <header class="shadow-sm sticky-top">
         <nav class="container d-flex justify-content-between align-items-center py-3">
             <h1 class="title m-0 fs-3">Yggdrasil</h1>
-            <div class="nav-links">
+            
+            <div class="nav-links d-flex align-items-center">
                 <a href="cladograma.html" class="text-white px-3 text-decoration-none">Cladograma</a>
                 <a href="#" class="text-white px-3 text-decoration-none">Sobre</a>
                 <a href="#" class="text-white px-3 text-decoration-none">FAQ</a>
-                <a href="/Yggdrasil/bd/login.php" class="text-white px-3 text-decoration-none">Login/Cadastro</a>
-            </div>
+                
+                <?php if(isset($_SESSION['usuario_id'])): ?>
+                    <div class="dropdown ms-2">
+                        <a href="#" class="text-white px-3 text-decoration-none dropdown-toggle d-flex align-items-center" id="menuUsuario" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="fs-5 me-2">👤</span> 
+                            <?php 
+                                if($_SESSION['usuario_email'] === 'pipocagamer2004@gmail.com') {
+                                    echo "<b>Administrador</b>";
+                                } else {
+                                    $primeiro_nome = explode(' ', trim($_SESSION['usuario_nome']))[0];
+                                    echo "<b>" . htmlspecialchars($primeiro_nome) . "</b>";
+                                }
+                            ?>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="menuUsuario">
+                            <?php if($_SESSION['usuario_email'] === 'pipocagamer2004@gmail.com'): ?>
+                                <li><a class="dropdown-item" href="/Yggdrasil/bd/admin.php">⚙️ Painel Admin</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                            <?php endif; ?>
+                            
+                            <li><a class="dropdown-item text-danger" href="/Yggdrasil/bd/logout.php">🚪 Desconectar</a></li>
+                        </ul>
+                    </div>
+
+                <?php else: ?>
+                    <a href="/Yggdrasil/bd/login.php" class="text-white px-3 text-decoration-none fw-bold">Login/Cadastro</a>
+                <?php endif; ?>
+                </div> 
         </nav>
     </header>
 

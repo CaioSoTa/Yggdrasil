@@ -1,39 +1,12 @@
-/*  Essencial  */
 * {
-    /* 1. Remove padding e margin padrão de TODOS os elementos (divs, body, h1, etc.) */
     margin: 0;
     padding: 0;
     
-    /* 2. Garante que padding e border não aumentem a largura/altura total do elemento */
     box-sizing: border-box; 
     
 }
-/*
-#cladobody {
-    background-color: #0d0502;  Fundo bem escuro 
-    color: white;
-    margin: 0;
-}
-
-
-#homebody {
-    margin: 0;
-    padding: 0;
-    background-color: #E1FFD5;
-    width: 100%;
-}
-
-main {
-    display: flex;
-}
-
-body{
-    font-family: "Mate SC";
-
-}
-*/
 
 main h2 {
     color: #1b5e20 !important;
-    font-size: 3.5rem; /* Ajustado para ser responsivo */
+    font-size: 3.5rem;
 }

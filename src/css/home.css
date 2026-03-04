@@ -1,15 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
 
 #homebody, html {
-    height: auto !important; /* Garante que a altura seja baseada no conteúdo */
-    min-height: 100vh;      /* Garante que o fundo cubra pelo menos a tela toda */
-    overflow-y: auto;       /* Força a barra de rolagem a aparecer se necessário */
+    height: auto !important; 
+    min-height: 100vh;      
+    overflow-y: auto;       
 }
 
 main {
-    display: block;         /* Mude de flex para block se estiver dando conflito no scroll */
+    display: block;         
     width: 100%;
-    padding-bottom: 100px;  /* Dá um "respiro" no final da página */
+    padding-bottom: 100px;  
 }
 
 .dino-frame {
@@ -68,7 +68,7 @@ h1, h2, .btn {
     border-radius: 26px;
     padding: 44px 38px;
     top: 50px;
-    left: 730px;
+    left: 1730px;
     box-shadow: 0 30px 70px rgba(0,0,0,0.5), inset 0 1px 0 rgba(120,200,80,0.08);
     position: relative;
     z-index: 1;

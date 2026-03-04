@@ -17,7 +17,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['usuario_nome'] = $usuario['nome'];
             $_SESSION['usuario_email'] = $usuario['email'];
             
-            header("Location: ../pages/cladograma.html"); 
+            header("Location: ../pages/home.php"); 
             exit();
         } else {
             $erro = "Senha incorreta!";
@@ -37,6 +37,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="../src/css/all.css">
         <title>Yggdrasil - Login</title>
+        <style>
+            #btn-ver-senha {
+                position: absolute;
+                right: 10px;          
+                top: 50%;            
+                transform: translateY(-50%);
+                background: transparent; 
+                border: none;         
+                cursor: pointer;      
+                font-size: 1.2rem;     
+                color: #6c757d;       
+                padding: 0;
+                z-index: 10;          
+            }
+
+            #btn-ver-senha:focus {
+                outline: none;
+            }
+
+            .relativa {
+                position: relative;
+            }
+
+            .planta-decoracao {
+                position: absolute;
+                top: -30px;    
+                right: -30px;  
+                width: 180px;  
+                z-index: 10;   
+                pointer-events: none; 
+            }
+        </style>
     </head>
     <body id="homebody">
     <header class="shadow-sm sticky-top">
@@ -54,7 +86,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <main class="container my-5">
         <div class="row justify-content-center">
             <div class="col-lg-6">
-                <div class="card shadow-lg">
+                <div class="card shadow-lg position-relative">
+                    
+                    <img src="../src/imgs/image 5.png" class="planta-decoracao" alt="Planta decorativa">
+
                     <div class="card-body p-5">
                         <h2 class="card-title text-center mb-4">Login</h2>
                         
@@ -67,7 +102,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </div>
                             <div class="mb-3">
                                 <label for="password" class="form-label">Senha</label>
-                                <input type="password" class="form-control" id="password" name="password" placeholder="Senha" required>
+                                <div class="relativa d-flex"> 
+                                    <input type="password" class="form-control" style="padding-right: 40px;" id="password" name="password" placeholder="Senha" required>
+                                    
+                                    <button type="button" id="btn-ver-senha" onclick="verSenha('btn-ver-senha')">⇀↼</button>
+                                </div>
+
+                                <script>
+                                    let verSenha = (idBotao) => {
+                                        const inputSenha = document.getElementById('password');
+                                        const botao = document.getElementById(idBotao);
+
+                                        if (inputSenha.type === 'password') {
+                                            inputSenha.type = 'text'; 
+                                            botao.innerText = '⊚⊚';  
+                                        } else {
+                                            inputSenha.type = 'password'; 
+                                            botao.innerText = '⇀↼';      
+                                        }
+                                    };
+                                </script>
                             </div>
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-success btn-lg">Entrar</button>
